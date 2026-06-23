@@ -52,7 +52,7 @@ func (s *Service) SendInvite(ctx context.Context, toEmail string, teamName strin
 		if err != nil {
 			return fmt.Errorf("%w: %v", domain.ErrExternal, err)
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 		if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
 			return fmt.Errorf("%w: email service returned %d", domain.ErrExternal, resp.StatusCode)
 		}

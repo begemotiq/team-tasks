@@ -81,7 +81,7 @@ func (r *TeamRepository) ListByUser(ctx context.Context, userID int64) (teams []
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows(rows, &err)
 
 	teams = make([]models.Team, 0)
 	for rows.Next() {

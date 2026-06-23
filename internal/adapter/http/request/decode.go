@@ -13,7 +13,7 @@ import (
 const maxJSONBodyBytes int64 = 1 << 20
 
 func DecodeJSON(r *http.Request, dst any) error {
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }()
 	decoder := json.NewDecoder(http.MaxBytesReader(nil, r.Body, maxJSONBodyBytes))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(dst); err != nil {

@@ -59,7 +59,11 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			slog.Default().Warn("close mysql connection failed", "error", err)
+		}
+	}()
 
 	usersRepo := mysqlrepo.NewUserRepository(db)
 	teamsRepo := mysqlrepo.NewTeamRepository(db)
@@ -218,28 +222,32 @@ func ensureTask(ctx context.Context, repo *mysqlrepo.TaskRepository, teamID int6
 
 func invalidateCache(ctx context.Context, cfg *config.Config, teamIDs ...int64) {
 	client := redisinfra.NewClient(cfg.Redis)
-	defer client.Close()
+	defer func() {
+		if err := client.Close(); err != nil {
+			slog.Default().Warn("close redis connection failed", "error", err)
+		}
+	}()
 	if err := client.Ping(ctx).Err(); err != nil {
-		fmt.Fprintf(os.Stderr, "warning: redis cache was not invalidated: %v\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "warning: redis cache was not invalidated: %v\n", err)
 		return
 	}
 	cache := redisrepo.NewCache(client)
 	for _, teamID := range teamIDs {
 		if err := cache.DeleteTeamTasks(ctx, teamID); err != nil {
-			fmt.Fprintf(os.Stderr, "warning: team %d cache was not invalidated: %v\n", teamID, err)
+			_, _ = fmt.Fprintf(os.Stderr, "warning: team %d cache was not invalidated: %v\n", teamID, err)
 		}
 	}
 }
 
 func printSeedSummary(owner, admin, member, outsider *models.User, backend, product *models.Team) {
-	fmt.Println("Seed data is ready.")
-	fmt.Println()
-	fmt.Println("Users:")
+	_, _ = fmt.Fprintln(os.Stdout, "Seed data is ready.")
+	_, _ = fmt.Fprintln(os.Stdout)
+	_, _ = fmt.Fprintln(os.Stdout, "Users:")
 	for _, user := range []*models.User{owner, admin, member, outsider} {
-		fmt.Printf("  %s / %s (%s, id=%d)\n", user.Email, seedPassword, user.Name, user.ID)
+		_, _ = fmt.Fprintf(os.Stdout, "  %s / %s (%s, id=%d)\n", user.Email, seedPassword, user.Name, user.ID)
 	}
-	fmt.Println()
-	fmt.Println("Teams:")
-	fmt.Printf("  Backend id=%d, owner=%s, admin=%s, member=%s\n", backend.ID, owner.Email, admin.Email, member.Email)
-	fmt.Printf("  Product id=%d, owner=%s, admin=%s\n", product.ID, admin.Email, owner.Email)
+	_, _ = fmt.Fprintln(os.Stdout)
+	_, _ = fmt.Fprintln(os.Stdout, "Teams:")
+	_, _ = fmt.Fprintf(os.Stdout, "  Backend id=%d, owner=%s, admin=%s, member=%s\n", backend.ID, owner.Email, admin.Email, member.Email)
+	_, _ = fmt.Fprintf(os.Stdout, "  Product id=%d, owner=%s, admin=%s\n", product.ID, admin.Email, owner.Email)
 }

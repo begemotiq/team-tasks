@@ -54,7 +54,12 @@ func (r *OutboxRepository) ClaimPending(ctx context.Context, limit int) (events 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	rowsClosed := false
+	defer func() {
+		if !rowsClosed {
+			closeRows(rows, &err)
+		}
+	}()
 
 	events = make([]models.OutboxEvent, 0, limit)
 	ids := make([]any, 0, limit)
@@ -69,6 +74,11 @@ func (r *OutboxRepository) ClaimPending(ctx context.Context, limit int) (events 
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
+	if closeErr := rows.Close(); closeErr != nil {
+		rowsClosed = true
+		return nil, closeErr
+	}
+	rowsClosed = true
 	if len(events) == 0 {
 		if err := tx.Commit(); err != nil {
 			return nil, err

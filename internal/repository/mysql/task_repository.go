@@ -165,7 +165,7 @@ func (r *TaskRepository) List(ctx context.Context, filter models.TaskFilter, req
 	if err != nil {
 		return models.TaskList{}, err
 	}
-	defer rows.Close()
+	defer closeRows(rows, &err)
 
 	items := make([]models.Task, 0, filter.PageSize+1)
 	for rows.Next() {
@@ -224,7 +224,7 @@ func (r *TaskRepository) History(ctx context.Context, taskID int64) (history []m
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows(rows, &err)
 
 	history = make([]models.TaskHistory, 0)
 	for rows.Next() {
@@ -262,7 +262,7 @@ func (r *TaskRepository) TeamSummary(ctx context.Context, managerID int64) (summ
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows(rows, &err)
 
 	result := make([]models.TeamSummary, 0)
 	for rows.Next() {
@@ -304,7 +304,7 @@ func (r *TaskRepository) TopCreatorsByTeam(ctx context.Context, managerID int64)
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows(rows, &err)
 
 	result := make([]models.TopCreator, 0)
 	for rows.Next() {
@@ -337,7 +337,7 @@ func (r *TaskRepository) InvalidAssignees(ctx context.Context, managerID int64) 
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer closeRows(rows, &err)
 
 	tasks = make([]models.Task, 0)
 	for rows.Next() {

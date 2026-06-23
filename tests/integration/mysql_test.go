@@ -51,13 +51,13 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		if skip {
 			if requireDocker() {
-				fmt.Fprintf(os.Stderr, "Docker is required for MySQL integration tests: %v\n", err)
+				_, _ = fmt.Fprintf(os.Stderr, "Docker is required for MySQL integration tests: %v\n", err)
 				os.Exit(1)
 			}
-			fmt.Fprintf(os.Stderr, "skipping MySQL integration tests: %v\n", err)
+			_, _ = fmt.Fprintf(os.Stderr, "skipping MySQL integration tests: %v\n", err)
 			os.Exit(0)
 		}
-		fmt.Fprintf(os.Stderr, "failed to start MySQL integration tests: %v\n", err)
+		_, _ = fmt.Fprintf(os.Stderr, "failed to start MySQL integration tests: %v\n", err)
 		os.Exit(1)
 	}
 

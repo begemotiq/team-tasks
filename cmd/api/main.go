@@ -62,13 +62,21 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			logger.Error("close mysql connection failed", "error", err)
+		}
+	}()
 
 	redisClient := redisinfra.NewClient(cfg.Redis)
 	if err := redisClient.Ping(ctx).Err(); err != nil {
 		return err
 	}
-	defer redisClient.Close()
+	defer func() {
+		if err := redisClient.Close(); err != nil {
+			logger.Error("close redis connection failed", "error", err)
+		}
+	}()
 
 	usersRepo := mysqlrepo.NewUserRepository(db)
 	teamsRepo := mysqlrepo.NewTeamRepository(db)

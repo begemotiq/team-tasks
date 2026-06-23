@@ -63,7 +63,11 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			logger.Error("close mysql connection failed", "error", err)
+		}
+	}()
 
 	outboxRepo := mysqlrepo.NewOutboxRepository(db)
 	email := emailadapter.NewService(cfg.Email)
